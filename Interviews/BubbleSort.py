@@ -13,11 +13,19 @@ First round  --> n-1 swaps
 *** [2,8,1,4,5,-3]
 Second round --> n-2 swaps ()
 
-Complexity = (n-1) + (n-2)...+2+1 = (n-1)+1 +(n-2+2)...=n * (n-1)/2
+Time Complexity = (n-1) + (n-2)...+2+1 = (n-1)+1 +(n-2+2)...=n * (n-1)/2
 BigO(n^2)
-
 Best case BigO(N) --> [-3,8,4,5,2,1]
-Avereage and worse case BigO(n^2)
+Average and worse case BigO(n^2)
+
+-------------------------------------------------------------------------------
+1.Comienza en el primer elemento de la lista.
+2.Compara el elemento actual con el siguiente elemento.
+3.Si el elemento actual es mayor que el siguiente, los intercambia.
+4.Se mueve al siguiente par de elementos y repite el proceso hasta llegar al 
+final de la lista.
+5.Vuelve al inicio de la lista y repite el proceso hasta que no se realice 
+ningún intercambio en una pasada completa.
 """
 import numpy as np
 
