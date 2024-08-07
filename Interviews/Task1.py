@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jul 31 20:34:13 2024
-
-@author: Francisco
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 30 22:00:36 2024
-
-@author: Francisco
-"""
-
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jul 30 20:29:39 2024
 
@@ -40,6 +25,7 @@ sigma=np.sqrt(var)
 
 x = np.linspace(mu - 4*sigma, mu + 4*sigma, 1000)
 
+#corregir sigma
 y = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
 
