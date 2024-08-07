@@ -12,6 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
+import time
 
 def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
               dividends=False,Bezugsrechte=False,Date_von="",Date_bis=""):
@@ -48,7 +49,7 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
         
     if Date_von != "":
         print("Date von taken into account")
-        wait = WebDriverWait(driver, 1)
+        wait = WebDriverWait(driver, 3)
         von_date_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
         von_date_input.click()
         von_date_input.clear()
@@ -57,7 +58,7 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
         
     if Date_bis != "":
         print("Date bis taken into account")
-        wait = WebDriverWait(driver, 1)
+        wait = WebDriverWait(driver, 3)
         bis_date_inputs = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
         bis_date_input = bis_date_inputs[1]
         bis_date_input.click()
@@ -73,16 +74,40 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
         EC.presence_of_element_located((By.CLASS_NAME, "widget-table"))
         )
     
-    content = driver.page_source
+    
+    df_list = []
+    while True:
+        content = driver.page_source
+        soup = BeautifulSoup(content, 'html.parser')
+        table = soup.find('table', {'class': 'widget-table'}) 
+        df = extract_table_data(table)
+        df_list.append(df)
+        try:
+            # Attempt to find and click the "next page" button
+            next_page_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.page-bar-type-button.btn.btn-lg[title^="Zeige Seite"] i span.icon-arrow-step-right-grey-big')))
+            next_page_button.click()
+            time.sleep(2)  # Wait for the next page to load
+            
+            content_after_click = driver.page_source
+            if content == content_after_click:
+                print("Page content did not change. No more pages to navigate.")
+                break
+        except:
+            # Break the loop if the next page button is not found or not clickable
+            print("No more pages to navigate.")
+            break
+    
+
     driver.quit()
     
-    soup = BeautifulSoup(content, 'html.parser')
-    table = soup.find('table', {'class': 'widget-table'}) 
+    final_df = pd.concat(df_list, ignore_index=True)
     
+    return final_df
+
+def extract_table_data(table):
     thead = table.find('thead')
     columns = [header.text.strip() for header in thead.find_all('th')] if thead else []
     tbody = table.find('tbody')
     data = [[col.text.strip() for col in row.find_all('td')] for row in tbody.find_all('tr')] if tbody else []
     df = pd.DataFrame(data, columns=columns)
-    
     return df

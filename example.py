@@ -12,10 +12,11 @@ from GetData.FrankfurtBoerse import AbrufData
 #NVIDIA US67066G1040
 #Deutsche Bank  DE0005140008 
 
-aktie_or_ISIN="DE0005140008"
-df=AbrufData(aktie_or_ISIN=aktie_or_ISIN,split=True,dividends=True,Bezugsrechte=True,Date_von="01/01/2024"
-             ,Date_bis="01/02/2024")
-df2=AbrufData(aktie_or_ISIN=aktie_or_ISIN,split=True,dividends=False,Bezugsrechte=True)
+aktie_or_ISIN="US67066G1040"
+df=AbrufData(aktie_or_ISIN=aktie_or_ISIN,split=False,dividends=True,Bezugsrechte=True,Date_von="01/01/2023"
+             ,Date_bis="01/08/2024")
+df2=AbrufData(aktie_or_ISIN=aktie_or_ISIN,split=False,dividends=True,Bezugsrechte=False,Date_von="01/01/2023"
+             ,Date_bis="01/08/2024",Boerse="Xetra")
 
 
 df['Datum'] = pd.to_datetime(df['Datum'], format='%d.%m.%y')
