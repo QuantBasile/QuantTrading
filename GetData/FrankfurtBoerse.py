@@ -3,6 +3,7 @@
 This scripts takes historical data from Frankfurt Boerse using Selenium
 """
 
+import logging
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
@@ -13,6 +14,33 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 import time
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+def js_click(driver, element):
+    driver.execute_script("arguments[0].click();", element)
+    
+def click_checkbox(driver, checkbox_id, label):
+    try:
+        checkbox = driver.find_element(By.ID, checkbox_id)
+        js_click(driver, checkbox)
+        logging.info(f"{label} option enabled.")
+    except Exception as e:
+        logging.warning(f"Could not enable {label}: {e}")
+        
+def input_date(driver, date_value, index=0):
+    try:
+        date_inputs = WebDriverWait(driver, 3).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'input.form-control.text-center'))
+        )
+        date_input = date_inputs[index]  # Use index 0 for "From Date", 1 for "To Date"
+        js_click(driver, date_input)
+        date_input.clear()
+        date_input.send_keys(date_value)
+        date_input.send_keys(Keys.RETURN)
+        logging.info(f"Date set: {date_value}")
+    except Exception as e:
+        logging.warning(f"Could not set date {date_value}: {e}")
 
 def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
               dividends=False,Bezugsrechte=False,Date_von="",Date_bis=""):
@@ -27,55 +55,41 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
     WebDriverWait(driver, 3)
     
     if Boerse == "Xetra": 
-        print("Xetra")
-        select_element = driver.find_element(By.CLASS_NAME, "custom-select")
-        select = Select(select_element)
-        select.select_by_visible_text("Xetra")
+        try:
+            select_element = driver.find_element(By.CLASS_NAME, "custom-select")
+            js_click(driver, select_element)
+            select = Select(select_element)
+            select.select_by_visible_text("Xetra")
+            logging.info("Xetra selected.")
+        except Exception as e:
+            logging.warning(f"Could not select Xetra: {e}")
         
-    if split == True: 
-        print("Split taken into account")
-        checkbox = driver.find_element(By.ID, 'input-clean-splits')
-        driver.execute_script("arguments[0].click();", checkbox) 
+    if split:
+        click_checkbox(driver, 'input-clean-splits', "Split")
+    if dividends:
+        click_checkbox(driver, 'input-clean-dividends', "Dividends")
+    if Bezugsrechte:
+        click_checkbox(driver, 'input-clean-subscription-rights', "Subscription Rights")
         
-    if dividends == True:
-        print("Dividends taken into account")
-        checkbox = driver.find_element(By.ID, 'input-clean-dividends')
-        driver.execute_script("arguments[0].click();", checkbox)
+    if Date_von:
+        input_date(driver, Date_von, index=0)  # From Date
+    if Date_bis:
+        input_date(driver, Date_bis, index=1)  # To Date
         
-    if Bezugsrechte == True: 
-        print("Bezugsrechte taken into account")
-        checkbox = driver.find_element(By.ID, 'input-clean-subscription-rights')
-        driver.execute_script("arguments[0].click();", checkbox)
-        
-    if Date_von != "":
-        print("Date von taken into account")
-        wait = WebDriverWait(driver, 3)
-        von_date_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
-        driver.execute_script("arguments[0].click();", von_date_input)
-        von_date_input.clear()
-        von_date_input.send_keys(Date_von)#'01/08/2024'
-        von_date_input.send_keys(Keys.RETURN) # press enter
-        
-    if Date_bis != "":
-        print("Date bis taken into account")
-        wait = WebDriverWait(driver, 3)
-        bis_date_inputs = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
-        bis_date_input = bis_date_inputs[1]
-        driver.execute_script("arguments[0].click();", bis_date_input)
-        bis_date_input.clear()
-        bis_date_input.send_keys(Date_bis)#'01/08/2024'
-        bis_date_input.send_keys(Keys.RETURN) # press enter
-        
-        
-    button = driver.find_element(By.CLASS_NAME, "form-button") #Play button auf der Website
-    button.click()
-    
+    try:
+        button = driver.find_element(By.CLASS_NAME, "form-button")
+        js_click(driver, button)
+        logging.info("Data fetch initiated.")
+    except Exception as e:
+        logging.warning(f"Could not click fetch button: {e}")
+
+    # Wait for data table to load
     WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, "widget-table"))
-        )
-    
+    )    
     
     df_list = []
+    wait = WebDriverWait(driver, 1)
     while True:
         content = driver.page_source
         soup = BeautifulSoup(content, 'html.parser')
