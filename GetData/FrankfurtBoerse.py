@@ -35,23 +35,23 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
     if split == True: 
         print("Split taken into account")
         checkbox = driver.find_element(By.ID, 'input-clean-splits')
-        checkbox.click()
+        driver.execute_script("arguments[0].click();", checkbox) 
         
     if dividends == True:
         print("Dividends taken into account")
         checkbox = driver.find_element(By.ID, 'input-clean-dividends')
-        checkbox.click()
+        driver.execute_script("arguments[0].click();", checkbox)
         
     if Bezugsrechte == True: 
         print("Bezugsrechte taken into account")
         checkbox = driver.find_element(By.ID, 'input-clean-subscription-rights')
-        checkbox.click()
+        driver.execute_script("arguments[0].click();", checkbox)
         
     if Date_von != "":
         print("Date von taken into account")
         wait = WebDriverWait(driver, 3)
         von_date_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
-        von_date_input.click()
+        driver.execute_script("arguments[0].click();", von_date_input)
         von_date_input.clear()
         von_date_input.send_keys(Date_von)#'01/08/2024'
         von_date_input.send_keys(Keys.RETURN) # press enter
@@ -61,7 +61,7 @@ def AbrufData(Boerse="Frankfurt",aktie_or_ISIN="deutsche-bank-ag",split=False,
         wait = WebDriverWait(driver, 3)
         bis_date_inputs = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'input.form-control.text-center')))
         bis_date_input = bis_date_inputs[1]
-        bis_date_input.click()
+        driver.execute_script("arguments[0].click();", bis_date_input)
         bis_date_input.clear()
         bis_date_input.send_keys(Date_bis)#'01/08/2024'
         bis_date_input.send_keys(Keys.RETURN) # press enter
